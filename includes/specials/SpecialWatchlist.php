@@ -192,10 +192,7 @@ class SpecialWatchlist extends ChangesListSpecialPage {
 					'description' => 'rcfilters-filter-watchlistactivity-unseen-description',
 					'cssClassSuffix' => 'watchedunseen',
 					'isRowApplicableCallable' => function ( $ctx, RecentChange $rc ) {
-						$changeTs = $rc->getAttribute( 'rc_timestamp' );
-						$lastVisitTs = $this->getLatestSeenTimestamp( $rc );
-
-						return $lastVisitTs !== null && $changeTs >= $lastVisitTs;
+						return !$this->isChangeEffectivelySeen( $rc );
 					},
 				],
 				[
@@ -204,10 +201,7 @@ class SpecialWatchlist extends ChangesListSpecialPage {
 					'description' => 'rcfilters-filter-watchlistactivity-seen-description',
 					'cssClassSuffix' => 'watchedseen',
 					'isRowApplicableCallable' => function ( $ctx, RecentChange $rc ) {
-						$changeTs = $rc->getAttribute( 'rc_timestamp' );
-						$lastVisitTs = $this->getLatestSeenTimestamp( $rc );
-
-						return $lastVisitTs === null || $changeTs < $lastVisitTs;
+						return $this->isChangeEffectivelySeen( $rc );
 					}
 				],
 			],
@@ -541,10 +535,9 @@ class SpecialWatchlist extends ChangesListSpecialPage {
 			$rc->counter = $counter++;
 
 			if ( $this->getConfig()->get( 'ShowUpdatedMarker' ) ) {
-				$lastVisitTs = $this->getLatestSeenTimestamp( $rc );
-				$updated = ( $lastVisitTs > $rc->getAttribute( 'timestamp' ) );
+				$unseen = !$this->isChangeEffectivelySeen( $rc );
 			} else {
-				$updated = false;
+				$unseen = false;
 			}
 
 			if ( isset( $watchedItemStore ) ) {
@@ -554,7 +547,7 @@ class SpecialWatchlist extends ChangesListSpecialPage {
 				$rc->numberofWatchingusers = 0;
 			}
 
-			$changeLine = $list->recentChangesLine( $rc, $updated, $counter );
+			$changeLine = $list->recentChangesLine( $rc, $unseen, $counter );
 			if ( $changeLine !== false ) {
 				$s .= $changeLine;
 			}
@@ -862,9 +855,19 @@ class SpecialWatchlist extends ChangesListSpecialPage {
 
 	/**
 	 * @param RecentChange $rc
-	 * @return string TS_MW timestamp
+	 * @return bool User viewed the revision or a newer one
 	 */
-	protected function getLatestSeenTimestamp( RecentChange $rc ) {
+	protected function isChangeEffectivelySeen( RecentChange $rc ) {
+		$lastVisitTs = $this->getLatestSeenTimestampIfHasUnseen( $rc );
+
+		return $lastVisitTs === null || $lastVisitTs > $rc->getAttribute( 'rc_timestamp' );
+	}
+
+	/**
+	 * @param RecentChange $rc
+	 * @return string|null TS_MW timestamp or null if all revision were seen
+	 */
+	private function getLatestSeenTimestampIfHasUnseen( RecentChange $rc ) {
 		return $this->watchStore->getLatestNotificationTimestamp(
 			$rc->getAttribute( 'wl_notificationtimestamp' ),
 			$rc->getPerformer(),
