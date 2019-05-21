@@ -322,6 +322,26 @@ class LinkerTest extends MediaWikiLangTestCase {
 				null
 			],
 			[
+				'',
+				"/* */",
+				false, true
+			],
+			[
+				'',
+				"/* */",
+				null
+			],
+			[
+				'<span dir="auto"><span class="autocomment">[[</span></span>',
+				"/* [[ */",
+				false, true
+			],
+			[
+				'<span dir="auto"><span class="autocomment">[[</span></span>',
+				"/* [[ */",
+				null
+			],
+			[
 				'<span dir="auto"><span class="autocomment"><a href="/wiki/Special:BlankPage#autocomment" title="Special:BlankPage">→‎autocomment</a></span></span>',
 				"/* autocomment */",
 				false, false
