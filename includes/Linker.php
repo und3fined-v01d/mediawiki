@@ -1218,38 +1218,12 @@ class Linker {
 
 				if ( $comment === null ) {
 					if ( $title ) {
-						$section = $auto;
-						# Remove links that a user may have manually put in the autosummary
-						# This could be improved by copying as much of Parser::stripSectionName as desired.
-						$section = str_replace( [
-							'[[:',
-							'[[',
-							']]'
-						], '', $section );
+						// link to the section that was edited
+						$sectionLink =
+							self::makeSectionLink( $auto, $title, $local, $wikiId, $wgLang );
 
-						// We don't want any links in the auto text to be linked, but we still
-						// want to show any [[ ]]
-						$sectionText = str_replace( '[[', '&#91;[', $auto );
-
-						$section = substr( Parser::guessSectionNameFromStrippedText( $section ), 1 );
-						// Support: HHVM (T222857)
-						// The guessSectionNameFromStrippedText method returns a non-empty string
-						// that starts with "#". Before PHP 7 (and still on HHVM) substr() would
-						// return false if the start offset is the end of the string.
-						// On PHP 7+, it gracefully returns empty string instead.
-						if ( $section === false ) {
-							$section = '';
-						}
-						if ( $local ) {
-							$sectionTitle = new TitleValue( NS_MAIN, '', $section );
-						} else {
-							$sectionTitle = $title->createFragmentTarget( $section );
-						}
-						if ( $sectionTitle ) {
-							$auto = Linker::makeCommentLink(
-								$sectionTitle, $wgLang->getArrow() . $wgLang->getDirMark() . $sectionText,
-								$wikiId, 'noclasses'
-							);
+						if ( $sectionLink ) {
+							$auto = $sectionLink;
 						}
 					}
 					if ( $pre ) {
@@ -1271,6 +1245,68 @@ class Linker {
 			$comment
 		);
 		return $comment . $append;
+	}
+
+	/**
+	 * @param string $section
+	 * @param LinkTarget $title
+	 * @param bool $local
+	 * @param string|bool $wikiId
+	 * @param Language $lang
+	 *
+	 * @return string|null
+	 */
+	private static function makeSectionLink( $section, $title, $local, $wikiId, $lang ) {
+		$sectionText = $section;
+
+		// Remove links that a user may have manually put in the autosummary
+		// This could be improved by copying as much of Parser::stripSectionName as desired.
+		$section = str_replace( [
+			'[[:',
+			'[[',
+			']]'
+		], '', $section );
+
+		// We don't want any links in the auto text to be linked, but we still
+		// want to show any [[ ]]
+		$sectionText = str_replace( '[[', '&#91;[', $sectionText );
+
+		$section = substr( Parser::guessSectionNameFromStrippedText( $section ), 1 );
+		// Support: HHVM (T222857)
+		// The guessSectionNameFromStrippedText method returns a non-empty string
+		// that starts with "#". Before PHP 7 (and still on HHVM) substr() would
+		// return false if the start offset is the end of the string.
+		// On PHP 7+, it gracefully returns empty string instead.
+		if ( $section === false ) {
+			$section = '';
+		}
+
+		try {
+			if ( $local ) {
+				if ( $section === '' ) {
+					// If there is no section name and no target page,
+					// there is nothing to link to (T222628).
+					$sectionTitle = null;
+				} else {
+					$sectionTitle = new TitleValue( NS_MAIN, '', $section );
+				}
+			} else {
+				$sectionTitle = $title->createFragmentTarget( $section );
+			}
+			if ( $sectionTitle ) {
+				return self::makeCommentLink(
+					$sectionTitle,
+					$lang->getArrow() . $lang->getDirMark() . $sectionText,
+					$wikiId,
+					'noclasses'
+				);
+			}
+		} catch ( MalformedTitleException $e ) {
+			// Section links can contain any text, so this shouldn't happen.
+			// Let's be defensive about anyway, and just keep $auto as it is.
+		}
+
+		return null;
 	}
 
 	/**
