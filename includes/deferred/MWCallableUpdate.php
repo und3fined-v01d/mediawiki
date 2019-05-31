@@ -5,15 +5,11 @@ use Wikimedia\Rdbms\IDatabase;
 /**
  * Deferrable Update for closure/callback
  */
-class MWCallableUpdate
-	implements DeferrableUpdate, DeferrableCallback, TransactionRoundAwareUpdate
-{
-	/** @var callable|null Callback, or null if it was cancelled */
+class MWCallableUpdate implements DeferrableUpdate, DeferrableCallback {
+	/** @var callable|null */
 	private $callback;
-	/** @var string Calling method name */
+	/** @var string */
 	private $fname;
-	/** @var int One of the class TRX_ROUND_* constants */
-	private $trxRoundRequirement = self::TRX_ROUND_PRESENT;
 
 	/**
 	 * @param callable $callback
@@ -51,17 +47,5 @@ class MWCallableUpdate
 
 	public function getOrigin() {
 		return $this->fname;
-	}
-
-	/**
-	 * @since 1.34
-	 * @param int $mode One of the class TRX_ROUND_* constants
-	 */
-	public function setTransactionRoundRequirement( $mode ) {
-		$this->trxRoundRequirement = $mode;
-	}
-
-	public function getTransactionRoundRequirement() {
-		return $this->trxRoundRequirement;
 	}
 }

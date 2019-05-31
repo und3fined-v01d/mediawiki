@@ -48,7 +48,6 @@ use MediaWiki\Revision\SlotRoleRegistry;
 use MediaWiki\Revision\SlotRecord;
 use MediaWiki\User\UserIdentity;
 use MessageCache;
-use MWCallableUpdate;
 use ParserCache;
 use ParserOptions;
 use ParserOutput;
@@ -1424,18 +1423,12 @@ class DerivedPageDataUpdater implements IDBAccessObject {
 		}
 
 		// Defer the getCannonicalParserOutput() call triggered by getSecondaryDataUpdates()
-		// by wrapping the code that schedules the secondary updates in a callback itself
-		$wrapperUpdate = new MWCallableUpdate(
-			function () {
-				$this->doSecondaryDataUpdates( [
-					// T52785 do not update any other pages on a null edit
-					'recursive' => $this->options['changed']
-				] );
-			},
-			__METHOD__
-		);
-		$wrapperUpdate->setTransactionRoundRequirement( $wrapperUpdate::TRX_ROUND_ABSENT );
-		DeferredUpdates::addUpdate( $wrapperUpdate );
+		DeferredUpdates::addCallableUpdate( function () {
+			$this->doSecondaryDataUpdates( [
+				// T52785 do not update any other pages on a null edit
+				'recursive' => $this->options['changed']
+			] );
+		} );
 
 		// TODO: MCR: check if *any* changed slot supports categories!
 		if ( $this->rcWatchCategoryMembership
@@ -1576,15 +1569,24 @@ class DerivedPageDataUpdater implements IDBAccessObject {
 	 *     current page or otherwise depend on it (default: false)
 	 *   - defer: one of the DeferredUpdates constants, or false to run immediately after waiting
 	 *     for replication of the changes from the SecondaryDataUpdates hooks (default: false)
+	 *   - transactionTicket: a transaction ticket from LBFactory::getEmptyTransactionTicket(),
+	 *     only when defer is false (default: null)
 	 * @since 1.32
 	 */
 	public function doSecondaryDataUpdates( array $options = [] ) {
 		$this->assertHasRevision( __METHOD__ );
-		$options += [ 'recursive' => false, 'defer' => false ];
+		$options += [
+			'recursive' => false,
+			'defer' => false,
+			'transactionTicket' => null,
+		];
 		$deferValues = [ false, DeferredUpdates::PRESEND, DeferredUpdates::POSTSEND ];
 		if ( !in_array( $options['defer'], $deferValues, true ) ) {
 			throw new InvalidArgumentException( 'Invalid value for defer: ' . $options['defer'] );
 		}
+		Assert::parameterType(
+			'integer|null', $options['transactionTicket'], '$options[\'transactionTicket\']' );
+
 		$updates = $this->getSecondaryDataUpdates( $options['recursive'] );
 
 		$triggeringUser = $this->options['triggeringUser'] ?? $this->user;
@@ -1594,6 +1596,14 @@ class DerivedPageDataUpdater implements IDBAccessObject {
 		$causeAction = $this->options['causeAction'] ?? 'unknown';
 		$causeAgent = $this->options['causeAgent'] ?? 'unknown';
 		$legacyRevision = new Revision( $this->revision );
+		$ticket = $options['transactionTicket'];
+
+		if ( $options['defer'] === false && $ticket !== null ) {
+			// For legacy hook handlers doing updates via LinksUpdateConstructed, make sure
+			// any pending writes they made get flushed before the doUpdate() calls below.
+			// This avoids snapshot-clearing errors in LinksUpdate::acquirePageLock().
+			$this->loadbalancerFactory->commitAndWaitForReplication( __METHOD__, $ticket );
+		}
 
 		foreach ( $updates as $update ) {
 			if ( $update instanceof DataUpdate ) {
@@ -1603,16 +1613,13 @@ class DerivedPageDataUpdater implements IDBAccessObject {
 				$update->setRevision( $legacyRevision );
 				$update->setTriggeringUser( $triggeringUser );
 			}
-		}
 
-		if ( $options['defer'] === false ) {
-			// T221577: flush any transaction; each update needs outer transaction scope
-			$this->loadbalancerFactory->commitMasterChanges( __METHOD__ );
-			foreach ( $updates as $update ) {
-				DeferredUpdates::attemptUpdate( $update, $this->loadbalancerFactory );
-			}
-		} else {
-			foreach ( $updates as $update ) {
+			if ( $options['defer'] === false ) {
+				if ( $update instanceof DataUpdate && $ticket !== null ) {
+					$update->setTransactionTicket( $ticket );
+				}
+				$update->doUpdate();
+			} else {
 				DeferredUpdates::addUpdate( $update, $options['defer'] );
 			}
 		}
