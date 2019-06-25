@@ -669,8 +669,7 @@ class SpecialUpload extends SpecialPage {
 			return true;
 		}
 
-		$local = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo()
-			->newFile( $this->mDesiredDestName );
+		$local = wfLocalFile( $this->mDesiredDestName );
 		if ( $local && $local->exists() ) {
 			// We're uploading a new version of an existing file.
 			// No creation, so don't watch it if we're not already.

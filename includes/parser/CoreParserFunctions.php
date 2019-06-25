@@ -1030,7 +1030,7 @@ class CoreParserFunctions {
 	 * @return array|string
 	 */
 	public static function filepath( $parser, $name = '', $argA = '', $argB = '' ) {
-		$file = MediaWikiServices::getInstance()->getRepoGroup()->findFile( $name );
+		$file = wfFindFile( $name );
 
 		if ( $argA == 'nowiki' ) {
 			// {{filepath: | option [| size] }}

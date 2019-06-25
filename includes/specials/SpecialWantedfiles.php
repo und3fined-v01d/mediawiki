@@ -24,8 +24,6 @@
  * @author Soxred93 <soxred93@gmail.com>
  */
 
-use MediaWiki\MediaWikiServices;
-
 /**
  * Querypage that lists the most wanted files
  *
@@ -99,14 +97,14 @@ class WantedFilesPage extends WantedQueryPage {
 	/**
 	 * Does the file exist?
 	 *
-	 * Use findFile() so we still think file namespace pages without files
-	 * are missing, but valid file redirects and foreign files are ok.
+	 * Use wfFindFile so we still think file namespace pages without
+	 * files are missing, but valid file redirects and foreign files are ok.
 	 *
 	 * @param Title $title
 	 * @return bool
 	 */
 	protected function existenceCheck( Title $title ) {
-		return (bool)MediaWikiServices::getInstance()->getRepoGroup()->findFile( $title );
+		return (bool)wfFindFile( $title );
 	}
 
 	function getQueryInfo() {

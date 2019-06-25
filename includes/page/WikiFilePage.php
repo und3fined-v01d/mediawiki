@@ -20,7 +20,6 @@
  * @file
  */
 
-use MediaWiki\MediaWikiServices;
 use Wikimedia\Rdbms\FakeResultWrapper;
 
 /**
@@ -56,16 +55,14 @@ class WikiFilePage extends WikiPage {
 	 * @return bool
 	 */
 	protected function loadFile() {
-		$services = MediaWikiServices::getInstance();
 		if ( $this->mFileLoaded ) {
 			return true;
 		}
 		$this->mFileLoaded = true;
 
-		$this->mFile = $services->getRepoGroup()->findFile( $this->mTitle );
+		$this->mFile = wfFindFile( $this->mTitle );
 		if ( !$this->mFile ) {
-			$this->mFile = $services->getRepoGroup()->getLocalRepo()
-				->newFile( $this->mTitle ); // always a File
+			$this->mFile = wfLocalFile( $this->mTitle ); // always a File
 		}
 		$this->mRepo = $this->mFile->getRepo();
 		return true;

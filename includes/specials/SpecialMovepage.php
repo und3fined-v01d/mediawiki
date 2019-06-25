@@ -537,7 +537,7 @@ class MovePageForm extends UnlistedSpecialPage {
 		if ( $nt->getNamespace() == NS_FILE
 			&& !( $this->moveOverShared && $user->isAllowed( 'reupload-shared' ) )
 			&& !RepoGroup::singleton()->getLocalRepo()->findFile( $nt )
-			&& MediaWikiServices::getInstance()->getRepoGroup()->findFile( $nt )
+			&& wfFindFile( $nt )
 		) {
 			$this->showForm( [ [ 'file-exists-sharedrepo' ] ] );
 
@@ -567,8 +567,7 @@ class MovePageForm extends UnlistedSpecialPage {
 
 			// Delete an associated image if there is
 			if ( $nt->getNamespace() == NS_FILE ) {
-				$file = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo()
-					->newFile( $nt );
+				$file = wfLocalFile( $nt );
 				$file->load( File::READ_LATEST );
 				if ( $file->exists() ) {
 					$file->delete( $reason, false, $user );

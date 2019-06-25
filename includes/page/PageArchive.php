@@ -420,9 +420,7 @@ class PageArchive {
 		$restoreFiles = $restoreAll || !empty( $fileVersions );
 
 		if ( $restoreFiles && $this->title->getNamespace() == NS_FILE ) {
-			/** @var LocalFile $img */
-			$img = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo()
-				->newFile( $this->title );
+			$img = wfLocalFile( $this->title );
 			$img->load( File::READ_LATEST );
 			$this->fileStatus = $img->restore( $fileVersions, $unsuppress );
 			if ( !$this->fileStatus->isOK() ) {

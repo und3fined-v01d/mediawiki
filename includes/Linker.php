@@ -555,8 +555,7 @@ class Linker {
 				# Use manually specified thumbnail
 				$manual_title = Title::makeTitleSafe( NS_FILE, $frameParams['manualthumb'] );
 				if ( $manual_title ) {
-					$manual_img = MediaWikiServices::getInstance()->getRepoGroup()
-						->findFile( $manual_title );
+					$manual_img = wfFindFile( $manual_title );
 					if ( $manual_img ) {
 						$thumb = $manual_img->getUnscaledThumb( $handlerParams );
 						$manualthumb = true;
@@ -694,8 +693,7 @@ class Linker {
 			$label = $title->getPrefixedText();
 		}
 		$encLabel = htmlspecialchars( $label );
-		$file = MediaWikiServices::getInstance()->getRepoGroup()->findFile( $title );
-		$currentExists = $time ? ( $file != false ) : false;
+		$currentExists = $time ? ( wfFindFile( $title ) != false ) : false;
 
 		if ( ( $wgUploadMissingFileUrl || $wgUploadNavigationUrl || $wgEnableUploads )
 			&& !$currentExists
@@ -758,13 +756,11 @@ class Linker {
 	 * @since 1.16.3
 	 * @param LinkTarget $title
 	 * @param string $html Pre-sanitized HTML
-	 * @param string|false $time MW timestamp of file creation time
+	 * @param string $time MW timestamp of file creation time
 	 * @return string HTML
 	 */
 	public static function makeMediaLinkObj( $title, $html = '', $time = false ) {
-		$img = MediaWikiServices::getInstance()->getRepoGroup()->findFile(
-			$title, [ 'time' => $time ]
-		);
+		$img = wfFindFile( $title, [ 'time' => $time ] );
 		return self::makeMediaLinkFile( $title, $img, $html );
 	}
 
