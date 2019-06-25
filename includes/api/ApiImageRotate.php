@@ -1,7 +1,4 @@
 <?php
-
-use MediaWiki\MediaWikiServices;
-
 /**
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,9 +56,7 @@ class ApiImageRotate extends ApiBase {
 				}
 			}
 
-			$file = MediaWikiServices::getInstance()->getRepoGroup()->findFile(
-				$title, [ 'latest' => true ]
-			);
+			$file = wfFindFile( $title, [ 'latest' => true ] );
 			if ( !$file ) {
 				$r['result'] = 'Failure';
 				$r['errors'] = $this->getErrorFormatter()->arrayFromStatus(

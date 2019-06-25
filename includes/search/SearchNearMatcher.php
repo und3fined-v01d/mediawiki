@@ -1,7 +1,5 @@
 <?php
 
-use MediaWiki\MediaWikiServices;
-
 /**
  * Implementation of near match title search.
  * TODO: split into service/implementation.
@@ -152,7 +150,7 @@ class SearchNearMatcher {
 		# There may have been a funny upload, or it may be on a shared
 		# file repository such as Wikimedia Commons.
 		if ( $title->getNamespace() == NS_FILE ) {
-			$image = MediaWikiServices::getInstance()->getRepoGroup()->findFile( $title );
+			$image = wfFindFile( $title );
 			if ( $image ) {
 				return $title;
 			}

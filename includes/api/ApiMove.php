@@ -20,8 +20,6 @@
  * @file
  */
 
-use MediaWiki\MediaWikiServices;
-
 /**
  * API Module to move pages
  * @ingroup API
@@ -61,7 +59,7 @@ class ApiMove extends ApiBase {
 
 		if ( $toTitle->getNamespace() == NS_FILE
 			&& !RepoGroup::singleton()->getLocalRepo()->findFile( $toTitle )
-			&& MediaWikiServices::getInstance()->getRepoGroup()->findFile( $toTitle )
+			&& wfFindFile( $toTitle )
 		) {
 			if ( !$params['ignorewarnings'] && $user->isAllowed( 'reupload-shared' ) ) {
 				$this->dieWithError( 'apierror-fileexists-sharedrepo-perm' );

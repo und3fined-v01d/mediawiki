@@ -32,8 +32,6 @@
  * @author Mij <mij@bitchx.it>
  */
 
-use MediaWiki\MediaWikiServices;
-
 require_once __DIR__ . '/Maintenance.php';
 
 class ImportImages extends Maintenance {
@@ -221,8 +219,7 @@ class ImportImages extends Maintenance {
 				}
 
 				# Check existence
-				$image = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo()
-					->newFile( $title );
+				$image = wfLocalFile( $title );
 				if ( $image->exists() ) {
 					if ( $this->hasOption( 'overwrite' ) ) {
 						$this->output( "{$base} exists, overwriting..." );

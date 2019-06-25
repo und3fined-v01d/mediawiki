@@ -21,7 +21,6 @@
  * @ingroup FileAbstraction
  */
 
-use MediaWiki\MediaWikiServices;
 use Wikimedia\Rdbms\IDatabase;
 
 /**
@@ -126,8 +125,7 @@ class LocalFileMoveBatch {
 	public function execute() {
 		$repo = $this->file->repo;
 		$status = $repo->newGood();
-		$destFile = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo()
-			->newFile( $this->target );
+		$destFile = wfLocalFile( $this->target );
 
 		$this->file->lock();
 		$destFile->lock(); // quickly fail if destination is not available

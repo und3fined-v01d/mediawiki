@@ -75,10 +75,9 @@ class ImagePage extends Article {
 
 		Hooks::run( 'ImagePageFindFile', [ $this, &$img, &$this->displayImg ] );
 		if ( !$img ) { // not set by hook?
-			$services = MediaWikiServices::getInstance();
-			$img = $services->getRepoGroup()->findFile( $this->getTitle() );
+			$img = wfFindFile( $this->getTitle() );
 			if ( !$img ) {
-				$img = $services->getRepoGroup()->getLocalRepo()->newFile( $this->getTitle() );
+				$img = wfLocalFile( $this->getTitle() );
 			}
 		}
 		$this->mPage->setFile( $img );

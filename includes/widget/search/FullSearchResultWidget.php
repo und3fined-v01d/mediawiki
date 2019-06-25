@@ -252,8 +252,7 @@ class FullSearchResultWidget implements SearchResultWidget {
 		$descHtml = null;
 		$thumbHtml = null;
 
-		$img = $result->getFile() ?: MediaWikiServices::getInstance()->getRepoGroup()
-			->findFile( $title );
+		$img = $result->getFile() ?: wfFindFile( $title );
 		if ( $img ) {
 			$thumb = $img->transform( [ 'width' => 120, 'height' => 120 ] );
 			if ( $thumb ) {

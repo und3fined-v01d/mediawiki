@@ -28,8 +28,6 @@
  * @ingroup Maintenance
  */
 
-use MediaWiki\MediaWikiServices;
-
 require_once __DIR__ . '/Maintenance.php';
 
 /**
@@ -100,9 +98,7 @@ class DeleteBatch extends Maintenance {
 
 			$this->output( $title->getPrefixedText() );
 			if ( $title->getNamespace() == NS_FILE ) {
-				$img = MediaWikiServices::getInstance()->getRepoGroup()->findFile(
-					$title, [ 'ignoreRedirect' => true ]
-				);
+				$img = wfFindFile( $title, [ 'ignoreRedirect' => true ] );
 				if ( $img && $img->isLocal() && !$img->delete( $reason ) ) {
 					$this->output( " FAILED to delete associated file... " );
 				}

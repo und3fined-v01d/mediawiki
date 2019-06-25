@@ -21,8 +21,6 @@
  * @ingroup Maintenance
  */
 
-use MediaWiki\MediaWikiServices;
-
 require_once __DIR__ . '/Maintenance.php';
 
 /**
@@ -68,7 +66,7 @@ class EraseArchivedFile extends Maintenance {
 			$afile = ArchivedFile::newFromRow( $row );
 		}
 
-		$file = MediaWikiServices::getInstance()->getRepoGroup()->getLocalRepo()->newFile( $filename );
+		$file = wfLocalFile( $filename );
 		if ( $file->exists() ) {
 			$this->fatalError( "File '$filename' is still a public file, use the delete form.\n" );
 		}

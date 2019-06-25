@@ -3887,7 +3887,7 @@ class Parser {
 		} elseif ( isset( $options['sha1'] ) ) { // get by (sha1,timestamp)
 			$file = RepoGroup::singleton()->findFileFromKey( $options['sha1'], $options );
 		} else { // get by (name,timestamp)
-			$file = MediaWikiServices::getInstance()->getRepoGroup()->findFile( $title, $options );
+			$file = wfFindFile( $title, $options );
 		}
 		return $file;
 	}
