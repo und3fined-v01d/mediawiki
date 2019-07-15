@@ -578,6 +578,35 @@ class LoadBalancerTest extends MediaWikiTestCase {
 		$rConn->insert( 'test', [ 't' => 1 ], __METHOD__ );
 	}
 
+	/**
+	 * @covers \Wikimedia\Rdbms\LoadBalancer::getConnection()
+	 */
+	public function testGetConnectionRefDefaultGroup() {
+		$lb = $this->newMultiServerLocalLoadBalancer( [ 'defaultGroup' => 'vslow' ] );
+		$lbWrapper = TestingAccessWrapper::newFromObject( $lb );
+
+		$rVslow = $lb->getConnectionRef( DB_REPLICA );
+		$vslowIndexPicked = $rVslow->getLBInfo( 'serverIndex' );
+
+		$this->assertSame( $vslowIndexPicked, $lbWrapper->getExistingReaderIndex( 'vslow' ) );
+	}
+
+	/**
+	 * @covers \Wikimedia\Rdbms\LoadBalancer::getConnection()
+	 */
+	public function testGetConnectionRefUnknownDefaultGroup() {
+		$lb = $this->newMultiServerLocalLoadBalancer( [ 'defaultGroup' => 'invalid' ] );
+
+		$this->assertInstanceOf(
+			IDatabase::class,
+			$lb->getConnectionRef( DB_REPLICA )
+		);
+	}
+
+	/**
+	 * @covers \Wikimedia\Rdbms\LoadBalancer::getConnection()
+	 * @covers \Wikimedia\Rdbms\LoadBalancer::getMaintenanceConnectionRef()
+	 */
 	public function testQueryGroupIndex() {
 		$lb = $this->newMultiServerLocalLoadBalancer( [ 'defaultGroup' => false ] );
 		/** @var LoadBalancer $lbWrapper */
@@ -586,7 +615,10 @@ class LoadBalancerTest extends MediaWikiTestCase {
 		$rGeneric = $lb->getConnectionRef( DB_REPLICA );
 		$mainIndexPicked = $rGeneric->getLBInfo( 'serverIndex' );
 
-		$this->assertEquals( $mainIndexPicked, $lbWrapper->getExistingReaderIndex( false ) );
+		$this->assertEquals(
+			$mainIndexPicked,
+			$lbWrapper->getExistingReaderIndex( $lb::GROUP_GENERIC )
+		);
 		$this->assertTrue( in_array( $mainIndexPicked, [ 1, 2 ] ) );
 		for ( $i = 0; $i < 300; ++$i ) {
 			$rLog = $lb->getConnectionRef( DB_REPLICA, [] );
