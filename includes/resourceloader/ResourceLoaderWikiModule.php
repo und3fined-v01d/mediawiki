@@ -382,13 +382,26 @@ class ResourceLoaderWikiModule extends ResourceLoaderModule {
 	 * @return array Keyed by page name
 	 */
 	protected function getTitleInfo( ResourceLoaderContext $context ) {
+		$tmpDidAssignment = 0;
+		$tmpAssignedValue = -1;
 		$dbr = $this->getDB();
 
 		$pageNames = array_keys( $this->getPages( $context ) );
 		sort( $pageNames );
 		$batchKey = implode( '|', $pageNames );
 		if ( !isset( $this->titleInfo[$batchKey] ) ) {
-			$this->titleInfo[$batchKey] = static::fetchTitleInfo( $dbr, $pageNames, __METHOD__ );
+			$tmpAssignedValue = static::fetchTitleInfo( $dbr, $pageNames, __METHOD__ );
+			$this->titleInfo[$batchKey] = $tmpAssignedValue;
+			$tmpDidAssignment = 1;
+		}
+		// phpcs:ignore Generic.PHP.NoSilencedErrors.Discouraged
+		if ( @$this->titleInfo[$batchKey] === null ) {
+			// Temporary debugging - this should be impossible (T229433).
+			$this->logger->warning( 'ResourceLoaderWikiModule titleInfo key bug', [
+				'assignDid' => $tmpDidAssignment,
+				'assignFetchedValue' => $tmpAssignedValue,
+				'trace' => ( new RuntimeException() )->getTraceAsString(),
+			] );
 		}
 
 		$titleInfo = $this->titleInfo[$batchKey];
