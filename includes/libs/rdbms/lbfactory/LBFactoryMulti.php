@@ -300,8 +300,9 @@ class LBFactoryMulti extends LBFactory {
 			if ( !array_key_exists( ILoadBalancer::GROUP_GENERIC, $groupLoads )
 				&& isset( $wgT232613 ) && $wgT232613 === true ) {
 				// Core dump
+				wfDebugLog( 'AdHocDebug', ' triggering coredump for T232613' );
 				posix_setrlimit( POSIX_RLIMIT_CORE, (int)10e9, POSIX_RLIMIT_INFINITY );
-				posix_kill( posix_getpid(), SIGABRT );
+				posix_kill( posix_getpid(), 6 /** SIGABRT **/ );
 			}
 			throw new UnexpectedValueException( "Empty generic load array; no master defined." );
 		}
