@@ -293,8 +293,16 @@ class LBFactoryMulti extends LBFactory {
 	 * @return array[] List of server config maps
 	 */
 	private function makeServerArray( array $serverTemplate, array $groupLoads ) {
+		global $wgT232613;
+
 		// The master server is the first host explicitly listed in the generic load group
 		if ( !$groupLoads[ILoadBalancer::GROUP_GENERIC] ) {
+			if ( !array_key_exists( ILoadBalancer::GROUP_GENERIC, $groupLoads )
+				&& isset( $wgT232613 ) && $wgT232613 === true ) {
+				// Core dump
+				posix_setrlimit( POSIX_RLIMIT_CORE, (int)10e9, POSIX_RLIMIT_INFINITY );
+				posix_kill( posix_getpid(), SIGABRT );
+			}
 			throw new UnexpectedValueException( "Empty generic load array; no master defined." );
 		}
 
