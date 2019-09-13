@@ -191,8 +191,24 @@ class LBFactoryMulti extends LBFactory {
 	}
 
 	public function newExternalLB( $cluster, $owner = null ) {
+		global $wgT232613;
+
 		if ( !isset( $this->externalLoads[$cluster] ) ) {
 			throw new InvalidArgumentException( "Unknown cluster '$cluster'" );
+		}
+
+		$groupLoads = [ ILoadBalancer::GROUP_GENERIC => $this->externalLoads[$cluster] ];
+
+		if ( isset( $wgT232613 ) && $wgT232613 === true ) {
+			wfDebugLog( 'AdHocDebug',
+				__METHOD__ . 'groupLoads logging for T232613',
+				'private',
+				[
+					'T232613.groupLoads' => var_export( $groupLoads, true ),
+					'T232613.GROUP_GENERIC' => var_export( ILoadBalancer::GROUP_GENERIC, true ),
+					'T232613.equality' => (string)( '' === ILoadBalancer::GROUP_GENERIC ),
+				]
+			);
 		}
 
 		return $this->newLoadBalancer(
@@ -201,7 +217,7 @@ class LBFactoryMulti extends LBFactory {
 				$this->externalTemplateOverrides,
 				$this->templateOverridesByCluster[$cluster] ?? []
 			),
-			[ ILoadBalancer::GROUP_GENERIC => $this->externalLoads[$cluster] ],
+			$groupLoads,
 			$this->readOnlyReason,
 			$owner
 		);
@@ -300,7 +316,14 @@ class LBFactoryMulti extends LBFactory {
 			if ( !array_key_exists( ILoadBalancer::GROUP_GENERIC, $groupLoads )
 				&& isset( $wgT232613 ) && $wgT232613 === true ) {
 				// Core dump
-				wfDebugLog( 'AdHocDebug', ' triggering coredump for T232613' );
+				wfDebugLog( 'AdHocDebug', __METHOD__ . ' triggering coredump for T232613',
+					'private',
+					[
+						'T232613.groupLoads' => var_export( $groupLoads, true ),
+						'T232613.GROUP_GENERIC' => var_export( ILoadBalancer::GROUP_GENERIC, true ),
+						'T232613.equality' => (string)( '' === ILoadBalancer::GROUP_GENERIC ),
+					]
+				);
 				posix_setrlimit( POSIX_RLIMIT_CORE, (int)10e9, POSIX_RLIMIT_INFINITY );
 				posix_kill( posix_getpid(), 6 /** SIGABRT **/ );
 			}
