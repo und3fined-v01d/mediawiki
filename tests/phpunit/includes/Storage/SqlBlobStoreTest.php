@@ -274,13 +274,14 @@ class SqlBlobStoreTest extends MediaWikiTestCase {
 	public function testSimpleStorageNonExistentBlobBatch() {
 		$store = $this->getBlobStore();
 		$result = $store->getBlobBatch( [ 'tt:this_will_not_exist', 'tt:1000', 'bla:1001' ] );
-		$this->assertSame(
+		$this->assertArrayEquals(
 			[
 				'tt:this_will_not_exist' => null,
 				'tt:1000' => null,
 				'bla:1001' => null
 			],
-			$result->getValue()
+			$result->getValue(),
+			false, true
 		);
 		$this->assertSame( [
 			[
@@ -314,12 +315,13 @@ class SqlBlobStoreTest extends MediaWikiTestCase {
 		$store = $this->getBlobStore();
 		$address = $store->storeBlob( 'test_data' );
 		$result = $store->getBlobBatch( [ $address, 'tt:this_will_not_exist_too' ] );
-		$this->assertSame(
+		$this->assertArrayEquals(
 			[
 				$address => 'test_data',
 				'tt:this_will_not_exist_too' => null
 			],
-			$result->getValue()
+			$result->getValue(),
+			false, true
 		);
 		$this->assertSame( [
 			[
