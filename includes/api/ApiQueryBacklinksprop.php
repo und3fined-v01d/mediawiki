@@ -286,8 +286,6 @@ class ApiQueryBacklinksprop extends ApiQueryGeneratorBase {
 		$res = $this->select( __METHOD__ );
 
 		if ( is_null( $resultPageSet ) ) {
-			$this->executeGenderCacheFromResultWrapper( $res, __METHOD__ );
-
 			$count = 0;
 			foreach ( $res as $row ) {
 				if ( ++$count > $params['limit'] ) {
