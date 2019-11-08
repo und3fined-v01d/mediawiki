@@ -1888,6 +1888,7 @@ return [
 			'comma-separator',
 			'parentheses-start',
 			'parentheses-end',
+			'semicolon-separator',
 			'brackets-start',
 			'brackets-end',
 			'pipe-separator'
