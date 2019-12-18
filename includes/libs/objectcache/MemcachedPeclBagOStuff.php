@@ -317,7 +317,18 @@ class MemcachedPeclBagOStuff extends MemcachedBagOStuff {
 		}
 
 		// The PECL implementation uses "gets" which works as well as a pipeline
-		$result = $this->acquireSyncClient()->getMulti( $keys ) ?: [];
+		$client = $this->acquireSyncClient();
+		if ( !method_exists( $client, 'getMulti' ) ) {
+			$this->logger->error(
+				'T239724: Corrupt client object. ' . "\n"
+					. 'type=' . gettype( $client ) . "\n"
+					. 'class=' . get_class( $client ) . "\n"
+					. 'methods=' . implode( ',', get_class_methods( $client ) ),
+				[ 'exception' => new RuntimeException() ]
+			);
+		}
+
+		$result = $client->getMulti( $keys ) ?: [];
 
 		return $this->checkResult( false, $result );
 	}
