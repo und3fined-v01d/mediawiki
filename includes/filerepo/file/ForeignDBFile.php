@@ -141,7 +141,7 @@ class ForeignDBFile extends LocalFile {
 			function ( $oldValue, &$ttl, array &$setOpts ) use ( $renderUrl, $fname ) {
 				wfDebug( "Fetching shared description from $renderUrl\n" );
 				$res = MediaWikiServices::getInstance()->getHttpRequestFactory()->
-					get( $renderUrl, [], $fname );
+					get( $renderUrl, [ 'timeout' => 2 ], $fname );
 				if ( !$res ) {
 					$ttl = WANObjectCache::TTL_UNCACHEABLE;
 				}
