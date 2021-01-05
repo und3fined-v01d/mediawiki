@@ -29,4 +29,18 @@ jobs:
       - name: Setup LocalSettings.php
         run: echo "wfLoadSkin( 'Vector' );" >> LocalSettings.php
       - name: Test mediawiki
-        run: curl https://localhost:8080/w
+        run: curl http://localhost:8080/w
+      - name: Setup Nodejs
+        uses: actions/setup-node@v1
+        with:
+          node-version: "10.x"
+      - name: Install dependencies
+        run: npm ci
+      - name: Take Mediawiki screenshot
+        run: node check-mediawiki.js
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-artifacts
+          path: |
+            log
