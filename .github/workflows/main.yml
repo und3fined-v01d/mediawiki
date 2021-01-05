@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Create .env file
+        run: "${GITHUB_WORKSPACE}/.github/scripts/environment.sh"
+        shell: bash
+      - name: Create docker-compose.override.yml
+        run: "${GITHUB_WORKSPACE}/.github/scripts/docker-compose.override.sh"
+        shell: bash
+      - name: Start Mediawiki-docker
+        run: |
+          docker-compose up -d
+          docker-compose exec -T mediawiki composer update
+          docker-compose exec -T mediawiki /bin/bash /docker/install.sh
+      - name: Clone skins/Vector
+        run: git clone "https://gerrit.wikimedia.org/r/mediawiki/skins/Vector" skins/Vector
+      - name: Setup LocalSettings.php
+        run: echo "wfLoadSkin( 'Vector' );" >> LocalSettings.php
+      - name: Test mediawiki
+        run: curl http://localhost:8080/w
+      - name: Setup Nodejs
+        uses: actions/setup-node@v1
+        with:
+          node-version: "10.x"
+      - name: Install dependencies
+        run: npm ci
+      - name: Take Mediawiki screenshot
+        run: node check-mediawiki.js
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-artifacts
+          path: |
+            log
