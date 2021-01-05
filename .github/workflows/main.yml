@@ -12,22 +12,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup Node.js v10
-        uses: actions/setup-node@v1
-        with:
-          node-version: '10.x'
-      
+      - uses: actions/checkout@v2
       - name: Create .env file
-        uses: SpicyPizza/create-envfile@v1
-        with:
-          envkey_MW_DOCKER_PORT: 8080
-          envkey_MW_SCRIPT_PATH: /w
-          envkey_MW_SERVER: "http://localhost:8080"
-          envkey_MEDIAWIKI_USER: "Admin"
-          envkey_MEDIAWIKI_PASSWORD: "dockerpass"
-          envkey_XDEBUG_CONFIG: ""
+        run: "${GITHUB_WORKSPACE}/.github/scripts/environment.sh"
+        shell: bash
       - name: Create docker-compose.override.yml
-        run: ${{ github.action_path }}/docker-compose.override.sh
+        run: "${GITHUB_WORKSPACE}/.github/scripts/docker-compose.override.sh"
         shell: bash
       - name: Start Mediawiki-docker
         run: |

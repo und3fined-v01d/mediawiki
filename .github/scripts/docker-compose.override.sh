@@ -1,5 +1,3 @@
-#!/bin/bash -l
-
 echo "
 version: '3.7'
 services:
